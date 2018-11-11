@@ -171,7 +171,8 @@ def save_model(file_dir, data):
 
 
 if __name__ == "__main__":
-    companies = ['apple']
+    companies = ['apple', 'amazon', 'boeing', 'coke', 'comcast', 'exxon', 'ibm', 'netflix', 'pg']
     for company in companies:
+        print('Processing : {}'.format(company))
         model = build_model(company)
         save_model(company, model)
