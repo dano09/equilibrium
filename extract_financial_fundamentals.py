@@ -7,9 +7,6 @@ pd.set_option('display.max_rows', 50)
 pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 
-# Read Data
-path = 'C:/Users/Justin/PycharmProjects/equilibrium/data/'
-files = ['appl_90q1_99q1.xlsx', 'appl_99q2_09q1.xlsx', 'appl_09q2_18q3.xlsx']
 
 # Input files from Bloomberg
 INCOME_STATEMENT = 'Income - Adjusted'
@@ -101,9 +98,13 @@ def process_file(data_file, required_metrics):
     return data
 
 
+def post_merge_cleaning(df):
+    df.sort_index(ascending=False, inplace=True)
+    df = df.replace({'—': 0})
+    return df[~df.index.duplicated(keep='first')]
+
+
 def process_income_statement(income_statement_data):
-    income_statement_data.sort_index(ascending=False, inplace=True)
-    income_statement_data = income_statement_data.replace({'—': 0})
     income_statement_data['OPEX'] = income_statement_data['IS_COGS_TO_FE_AND_PP_AND_G'] + income_statement_data['IS_OPERATING_EXPN']
     income_statement_data.rename(columns={'SALES_REV_TURN': 'REVENUE', 'IS_INC_TAX_EXP': 'TAX_EXPENSE'}, inplace=True)
     income_statement_data.drop(['IS_COGS_TO_FE_AND_PP_AND_G', 'IS_OPERATING_EXPN'], axis=1, inplace=True)
@@ -111,8 +112,6 @@ def process_income_statement(income_statement_data):
 
 
 def process_balance_sheet(balance_sheet_data):
-    balance_sheet_data.sort_index(ascending=False, inplace=True)
-    balance_sheet_data = balance_sheet_data.replace({'—': 0})
     balance_sheet_data['WORKING_CAP'] = balance_sheet_data['BS_CUR_ASSET_REPORT'] - balance_sheet_data['BS_CUR_LIAB']
     balance_sheet_data['CHNG_WC'] = balance_sheet_data['WORKING_CAP'] - balance_sheet_data['WORKING_CAP'].shift(-1)
     balance_sheet_data['CASH_INVESTMENTS'] = balance_sheet_data['C&CE_AND_STI_DETAILED'] + balance_sheet_data['BS_LT_INVEST']
@@ -121,8 +120,6 @@ def process_balance_sheet(balance_sheet_data):
 
 
 def process_cash_flow(cash_flow_data):
-    cash_flow_data.sort_index(ascending=False, inplace=True)
-    cash_flow_data = cash_flow_data.replace({'—': 0})
     cash_flow_data.rename(columns={'CHG_IN_FXD_&_INTANG_AST_DETAILED': 'CAPEX', 'CF_FREE_CASH_FLOW': 'FREE_CASH_FLOW'},inplace=True)
     # Rightfully negative in the context of Bloomberg, however we want to simply the free cash flow calculation so
     # making all factors positive that are subtracted from EBITDA
@@ -131,15 +128,11 @@ def process_cash_flow(cash_flow_data):
 
 
 def process_shares(shares_data):
-    shares_data.sort_index(ascending=False, inplace=True)
-    shares_data = shares_data.replace({'—': 0})
     shares_data.rename(columns={'IS_SH_FOR_DILUTED_EPS': 'WADS'}, inplace=True)
     return shares_data
 
 
 def process_stock_values(stock_values_data):
-    stock_values_data.sort_index(ascending=False, inplace=True)
-    stock_values_data = stock_values_data.replace({'—': 0})
     stock_values_data.rename(columns={'PX_LAST': 'PRICE'}, inplace=True)
     return stock_values_data
 
@@ -177,29 +170,37 @@ def parse_data_for_a_company(files, file_path):
 
     income_statement_data = [time_period[INCOME_STATEMENT] for time_period in excel_data]
     income_statement = functools.reduce(lambda base, incom: base.append(incom),
-                                        [process_file(inc_file, INCOME_STATEMENT_METRICS) for inc_file in
-                                         income_statement_data])
+                                        [process_file(inc_file, INCOME_STATEMENT_METRICS) for inc_file in income_statement_data])
+
+    income_statement = post_merge_cleaning(income_statement)
     i_s = process_income_statement(income_statement)
 
     balance_sheet_data = [time_period[BALANCE_SHEET] for time_period in excel_data]
     balance_sheet = functools.reduce(lambda base, bs: base.append(bs),
-                                     [process_file(bal_sht_file, BALANCE_SHEET_METRICS) for bal_sht_file in
-                                      balance_sheet_data])
+                                     [process_file(bal_sht_file, BALANCE_SHEET_METRICS) for bal_sht_file in balance_sheet_data])
+
+    balance_sheet = post_merge_cleaning(balance_sheet)
     b_s = process_balance_sheet(balance_sheet)
 
     cash_flow_data = [time_period[CASH_FLOW] for time_period in excel_data]
     cash_flow = functools.reduce(lambda base, cf: base.append(cf),
                                  [process_file(chs_flow_file, CASH_FLOW_METRICS) for chs_flow_file in cash_flow_data])
+
+    cash_flow = post_merge_cleaning(cash_flow)
     c_f = process_cash_flow(cash_flow)
 
     shares_data = [time_period[SHARES] for time_period in excel_data]
     shares = functools.reduce(lambda base, shs: base.append(shs),
                               [process_file(shares_file, SHARES_METRICS) for shares_file in shares_data])
+
+    shares = post_merge_cleaning(shares)
     shs = process_shares(shares)
 
     stock_value_data = [time_period[STOCK_VALUE] for time_period in excel_data]
     stock_value = functools.reduce(lambda base, sv: base.append(sv),
                                    [process_file(stock_file, STOCK_VALUE_METRICS) for stock_file in stock_value_data])
+
+    stock_value = post_merge_cleaning(stock_value)
     s_v = process_stock_values(stock_value)
 
     return i_s, b_s, c_f, shs, s_v
@@ -213,6 +214,10 @@ def save_files(path, data_files):
     data_files[4].to_csv(path + O_STOCK_VALUE_FILE, mode='w', index_label='DATE')
 
 
-path += 'apple/'
+# Read Data
+path = 'C:/Users/Justin/PycharmProjects/equilibrium/data/'
+files = ['Sony_07q1_18q2.xlsx', 'Sony_97q1_06q4.xlsx']
+path += 'sony/'
 results = parse_data_for_a_company(files, path)
+#print('here')
 save_files(path, results)
