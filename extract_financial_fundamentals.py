@@ -23,14 +23,13 @@ O_SHARES_FILE = 'shares.csv'
 O_STOCK_VALUE_FILE = 'stock_values.csv'
 
 
-INCOME_STATEMENT_METRICS = ['SALES_REV_TURN', 'IS_COGS_TO_FE_AND_PP_AND_G', 'IS_OPERATING_EXPN', 'EBITDA',
-                            'IS_INC_TAX_EXP']
+INCOME_STATEMENT_METRICS = ['SALES_REV_TURN', 'IS_COGS_TO_FE_AND_PP_AND_G', 'IS_OPERATING_EXPN', 'EBITDA', 'IS_INC_TAX_EXP']
 
 # CHANGE IN WC = Total Current Assets - Total Current Liabilities,
 # CASH INVESTMENTS = (Cash, Cash Equivalents & STI) + (LT Investments & Receivables)
 # DEBT = ST DEBT + LT Debt
 BALANCE_SHEET_METRICS = ['BS_CUR_ASSET_REPORT', 'BS_CUR_LIAB', 'C&CE_AND_STI_DETAILED', 'BS_LT_INVEST', 'BS_ST_BORROW',
-                         'BS_LT_BORROW']
+                         'BS_LT_BORROW', 'MINORITY_NONCONTROLLING_INTEREST', 'BS_PFD_EQTY_&_HYBRID_CPTL']
 
 # Change in Fixed & Intang -> CHG_IN_FXD_&_INTANG_AST_DETAILED
 # Free Cash Flow -> CF_FREE_CASH_FLOW
@@ -107,7 +106,7 @@ def post_merge_cleaning(df):
 def process_income_statement(income_statement_data):
     income_statement_data['OPEX'] = income_statement_data['IS_COGS_TO_FE_AND_PP_AND_G'] + income_statement_data['IS_OPERATING_EXPN']
     income_statement_data.rename(columns={'SALES_REV_TURN': 'REVENUE', 'IS_INC_TAX_EXP': 'TAX_EXPENSE'}, inplace=True)
-    income_statement_data.drop(['IS_COGS_TO_FE_AND_PP_AND_G', 'IS_OPERATING_EXPN'], axis=1, inplace=True)
+    #income_statement_data.drop(['IS_COGS_TO_FE_AND_PP_AND_G', 'IS_OPERATING_EXPN'], axis=1, inplace=True)
     return income_statement_data[['REVENUE', 'OPEX', 'EBITDA', 'TAX_EXPENSE']]
 
 
@@ -116,7 +115,8 @@ def process_balance_sheet(balance_sheet_data):
     balance_sheet_data['CHNG_WC'] = balance_sheet_data['WORKING_CAP'] - balance_sheet_data['WORKING_CAP'].shift(-1)
     balance_sheet_data['CASH_INVESTMENTS'] = balance_sheet_data['C&CE_AND_STI_DETAILED'] + balance_sheet_data['BS_LT_INVEST']
     balance_sheet_data['DEBT'] = balance_sheet_data['BS_ST_BORROW'] + balance_sheet_data['BS_LT_BORROW']
-    return balance_sheet_data[['BS_CUR_ASSET_REPORT', 'BS_CUR_LIAB', 'WORKING_CAP', 'CHNG_WC', 'CASH_INVESTMENTS', 'DEBT']]
+    balance_sheet_data.rename(columns={'MINORITY_NONCONTROLLING_INTEREST': 'NON_CON_INT', 'BS_PFD_EQTY_&_HYBRID_CPTL': 'PREF_SEC'}, inplace=True)
+    return balance_sheet_data[['CHNG_WC', 'CASH_INVESTMENTS', 'DEBT', 'NON_CON_INT', 'PREF_SEC']]
 
 
 def process_cash_flow(cash_flow_data):
@@ -214,10 +214,21 @@ def save_files(path, data_files):
     data_files[4].to_csv(path + O_STOCK_VALUE_FILE, mode='w', index_label='DATE')
 
 
-# Read Data
-path = 'C:/Users/Justin/PycharmProjects/equilibrium/data/'
-files = ['Sony_07q1_18q2.xlsx', 'Sony_97q1_06q4.xlsx']
-path += 'sony/'
-results = parse_data_for_a_company(files, path)
-#print('here')
-save_files(path, results)
+if __name__ == "__main__":
+    # Read Data
+    path = 'C:/Users/Justin/PycharmProjects/equilibrium/data/'
+    data_set = {'amazon': ['AMZ_1997Q1-1998Q3.xlsx', 'AMZ_1998Q4-2008Q4.xlsx', 'AMZ_2009-2018.xlsx'],
+                'apple': ['appl_09q2_18q3.xlsx', 'appl_90q1_99q1.xlsx', 'appl_99q2_09q1.xlsx'],
+                'boeing': ['Boeing_08Q3_18Q2.xlsx', 'Boeing_90q1_98q2.xlsx', 'Boeing_98q3_08q2.xlsx'],
+                'coke': ['COKE_08Q4_18Q3.xlsx', 'COKE_90Q1_98Q3.xlsx', 'COKE_98Q4_08Q3.xlsx'],
+                'comcast': ['Comcast_09Q1_18Q2.xlsx', 'Comcast_90Q1_98Q3.xlsx', 'Comcast_98Q4_08Q4.xlsx'],
+                'exxon': ['Exxon_1990Q1-1998Q2.xlsx', 'Exxon_1998Q3-2008Q2.xlsx', 'Exxon_2008Q3-2018Q2.xlsx'],
+                'ibm': ['IBM_08Q4_18Q3.xlsx', 'IBM_88Q4_98Q3.xlsx', 'IBM_98Q4_08Q3.xlsx'],
+                'netflix': ['netflix_02q1_09q1.xlsx', 'netflix_09q2_18q3.xlsx'],
+                'pg': ['PG_08Q4_18Q3.xlsx', 'PG_90Q1_98Q3.xlsx', 'PG_98Q4_08Q3.xlsx']}
+
+    for company_name, files in data_set.items():
+        print('Processing company: {} with files: {}'.format(company_name, files))
+        path_directory = path + company_name + '/'
+        results = parse_data_for_a_company(files, path_directory)
+        save_files(path_directory, results)
