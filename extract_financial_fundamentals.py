@@ -11,11 +11,20 @@ pd.set_option('display.width', 1000)
 path = 'C:/Users/Justin/PycharmProjects/equilibrium/data/'
 files = ['appl_90q1_99q1.xlsx', 'appl_99q2_09q1.xlsx', 'appl_09q2_18q3.xlsx']
 
+# Input files from Bloomberg
 INCOME_STATEMENT = 'Income - Adjusted'
 BALANCE_SHEET = 'Bal Sheet - Standardized'
 CASH_FLOW = 'Cash Flow - Standardized'
 SHARES = 'Per Share'
 STOCK_VALUE = 'Stock Value'
+
+# Output data files we save after cleaning
+O_INCOME_FILE = 'income_statement.csv'
+O_BALANCE_SHEET_FILE = 'balance_sheet.csv'
+O_CASH_FLOW_FILE = 'cash_flow.csv'
+O_SHARES_FILE = 'shares.csv'
+O_STOCK_VALUE_FILE = 'stock_values.csv'
+
 
 INCOME_STATEMENT_METRICS = ['SALES_REV_TURN', 'IS_COGS_TO_FE_AND_PP_AND_G', 'IS_OPERATING_EXPN', 'EBITDA',
                             'IS_INC_TAX_EXP']
@@ -95,8 +104,7 @@ def process_file(data_file, required_metrics):
 def process_income_statement(income_statement_data):
     income_statement_data.sort_index(ascending=False, inplace=True)
     income_statement_data = income_statement_data.replace({'—': 0})
-    income_statement_data['OPEX'] = income_statement_data['IS_COGS_TO_FE_AND_PP_AND_G'] + income_statement_data[
-        'IS_OPERATING_EXPN']
+    income_statement_data['OPEX'] = income_statement_data['IS_COGS_TO_FE_AND_PP_AND_G'] + income_statement_data['IS_OPERATING_EXPN']
     income_statement_data.rename(columns={'SALES_REV_TURN': 'REVENUE', 'IS_INC_TAX_EXP': 'TAX_EXPENSE'}, inplace=True)
     income_statement_data.drop(['IS_COGS_TO_FE_AND_PP_AND_G', 'IS_OPERATING_EXPN'], axis=1, inplace=True)
     return income_statement_data[['REVENUE', 'OPEX', 'EBITDA', 'TAX_EXPENSE']]
@@ -105,20 +113,20 @@ def process_income_statement(income_statement_data):
 def process_balance_sheet(balance_sheet_data):
     balance_sheet_data.sort_index(ascending=False, inplace=True)
     balance_sheet_data = balance_sheet_data.replace({'—': 0})
-    # actually WC
-    # todo: update to CHNG_WC by taking diff
-    balance_sheet_data['CHNG_WC'] = balance_sheet_data['BS_CUR_ASSET_REPORT'] - balance_sheet_data['BS_CUR_LIAB']
-    balance_sheet_data['CASH_INVESTMENTS'] = balance_sheet_data['C&CE_AND_STI_DETAILED'] + balance_sheet_data[
-        'BS_LT_INVEST']
+    balance_sheet_data['WORKING_CAP'] = balance_sheet_data['BS_CUR_ASSET_REPORT'] - balance_sheet_data['BS_CUR_LIAB']
+    balance_sheet_data['CHNG_WC'] = balance_sheet_data['WORKING_CAP'] - balance_sheet_data['WORKING_CAP'].shift(-1)
+    balance_sheet_data['CASH_INVESTMENTS'] = balance_sheet_data['C&CE_AND_STI_DETAILED'] + balance_sheet_data['BS_LT_INVEST']
     balance_sheet_data['DEBT'] = balance_sheet_data['BS_ST_BORROW'] + balance_sheet_data['BS_LT_BORROW']
-    return balance_sheet_data[['CHNG_WC', 'CASH_INVESTMENTS', 'DEBT']]
+    return balance_sheet_data[['BS_CUR_ASSET_REPORT', 'BS_CUR_LIAB', 'WORKING_CAP', 'CHNG_WC', 'CASH_INVESTMENTS', 'DEBT']]
 
 
 def process_cash_flow(cash_flow_data):
     cash_flow_data.sort_index(ascending=False, inplace=True)
     cash_flow_data = cash_flow_data.replace({'—': 0})
-    cash_flow_data.rename(columns={'CHG_IN_FXD_&_INTANG_AST_DETAILED': 'CAPEX', 'CF_FREE_CASH_FLOW': 'FREE_CASH_FLOW'},
-                          inplace=True)
+    cash_flow_data.rename(columns={'CHG_IN_FXD_&_INTANG_AST_DETAILED': 'CAPEX', 'CF_FREE_CASH_FLOW': 'FREE_CASH_FLOW'},inplace=True)
+    # Rightfully negative in the context of Bloomberg, however we want to simply the free cash flow calculation so
+    # making all factors positive that are subtracted from EBITDA
+    cash_flow_data['CAPEX'] = cash_flow_data['CAPEX'] * -1
     return cash_flow_data
 
 
@@ -136,10 +144,10 @@ def process_stock_values(stock_values_data):
     return stock_values_data
 
 
-def parse_data_for_a_company(files):
+def parse_data_for_a_company(files, file_path):
     # Income Parameters:
     sheet_names = [INCOME_STATEMENT, BALANCE_SHEET, CASH_FLOW, SHARES, STOCK_VALUE]
-    excel_data = [pd.read_excel(path + file, sheet_name=sheet_names, header=3) for file in files]
+    excel_data = [pd.read_excel(file_path + file, sheet_name=sheet_names, header=3) for file in files]
 
     '''
     data is a list of OrderedDicts (key-value pairs)
@@ -196,5 +204,15 @@ def parse_data_for_a_company(files):
 
     return i_s, b_s, c_f, shs, s_v
 
-results = parse_data_for_a_company(files)
 
+def save_files(path, data_files):
+    data_files[0].to_csv(path + O_INCOME_FILE, mode='w', index_label='DATE')
+    data_files[1].to_csv(path + O_BALANCE_SHEET_FILE, mode='w', index_label='DATE')
+    data_files[2].to_csv(path + O_CASH_FLOW_FILE, mode='w', index_label='DATE')
+    data_files[3].to_csv(path + O_SHARES_FILE, mode='w', index_label='DATE')
+    data_files[4].to_csv(path + O_STOCK_VALUE_FILE, mode='w', index_label='DATE')
+
+
+path += 'apple/'
+results = parse_data_for_a_company(files, path)
+save_files(path, results)

@@ -1,14 +1,16 @@
 import pandas as pd
 import functools
+pd.set_option('display.max_columns', 500)
+pd.set_option('display.width', 1000)
 
-BALANCE_SHEET_FILE = 'balance_sheet.csv'
-CASH_FLOW_FILE = 'cash_flow.csv'
-INCOME_FILE = 'income_statement.csv'
-SHARES_FILE = 'shares.csv'
-STOCK_VALUE_FILE = 'stock_values.csv'
-TREASURY_FILE = 't_bill_data.csv'
+O_INCOME_FILE = 'income_statement.csv'
+O_BALANCE_SHEET_FILE = 'balance_sheet.csv'
+O_CASH_FLOW_FILE = 'cash_flow.csv'
+O_SHARES_FILE = 'shares.csv'
+O_STOCK_VALUE_FILE = 'stock_values.csv'
+O_TREASURY_FILE = 't_bill_data.csv'
 
-file_names = [INCOME_FILE, CASH_FLOW_FILE, BALANCE_SHEET_FILE, SHARES_FILE, STOCK_VALUE_FILE]
+file_names = [O_INCOME_FILE, O_BALANCE_SHEET_FILE, O_CASH_FLOW_FILE, O_SHARES_FILE, O_STOCK_VALUE_FILE]
 
 
 def _get_data(location, dirs):
@@ -18,7 +20,9 @@ def _get_data(location, dirs):
         s_files = [pd.read_csv(data_dir + '/' + fn) for fn in file_names]
         s2_files = [t.set_index(t.columns[0]) for t in s_files]
         df = functools.reduce(lambda base, f: base.join(f, how='outer'), s2_files)
-    data['tbill'] = pd.read_csv(location + '/' + TREASURY_FILE)
+        df.sort_index(ascending=False, inplace=True)
+        data[stock] = df
+    #data['tbill'] = pd.read_csv(location + '/' + O_TREASURY_FILE)
     return data
 
 
@@ -44,3 +48,6 @@ def build_model():
     data = _get_data(path, companies)
 
     files = ['3month_tbills.xls', '10yr_tbills.xls']
+
+
+build_model()

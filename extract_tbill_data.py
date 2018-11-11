@@ -2,11 +2,6 @@ import pandas as pd
 from datetime import datetime
 
 
-path = 'C:/Users/Justin/PycharmProjects/equilbrium_model/data/'
-files = ['3month_tbills.xls', '10yr_tbills.xls']
-excel_data = [pd.read_excel(path + file, header=10) for file in files]
-
-
 def convert_index_names(date_string):
     """"
     Example:
@@ -25,16 +20,22 @@ def convert_index_names(date_string):
 def process_tbills(files):
     t_bills = []
     for data in files:
+        data['observation_date'] = data['observation_date'].astype(str)
+        data['observation_date'] = data.observation_date.str[:10]
         d = data.set_index('observation_date')
         indxs = d.index.values
         relabeled_indxs = {i: convert_index_names(str(i)) for i in indxs}
         d = d.rename(index=relabeled_indxs)
         t_bills.append(d)
-
+    # str(data['observation_date'].values[0])[:10]
+    #data['observation_date'].values[0].strftime('%Y-%m-%d')
     t_bill_data = t_bills[0].join(t_bills[1], how='outer')
     t_bill_data.sort_index(ascending=False, inplace=True)
     return t_bill_data
 
 
+path = 'C:/Users/Justin/PycharmProjects/equilibrium/data/'
+files = ['3month_tbills.xls', '10yr_tbills.xls']
+excel_data = [pd.read_excel(path + file, header=10) for file in files]
 result = process_tbills(excel_data)
-#result.to_csv('C:/Users/Justin/PycharmProjects/equilbrium_model/data/t_bill_data.csv')
+result.to_csv('C:/Users/Justin/PycharmProjects/equilibrium/data/t_bill_data.csv')
