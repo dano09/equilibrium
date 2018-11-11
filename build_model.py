@@ -22,7 +22,7 @@ def _get_data(location, dirs):
         df = functools.reduce(lambda base, f: base.join(f, how='outer'), s2_files)
         df.sort_index(ascending=False, inplace=True)
         data[stock] = df
-    #data['tbill'] = pd.read_csv(location + '/' + O_TREASURY_FILE)
+    data['tbill'] = pd.read_csv(location + '/' + O_TREASURY_FILE)
     return data
 
 
