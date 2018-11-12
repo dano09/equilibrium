@@ -12,7 +12,7 @@ O_STOCK_VALUE_FILE = 'stock_values.csv'
 O_TREASURY_FILE = 't_bill_data.csv'
 file_names = [O_INCOME_FILE, O_BALANCE_SHEET_FILE, O_CASH_FLOW_FILE, O_SHARES_FILE, O_STOCK_VALUE_FILE]
 FACTOR_INPUT_COLS = ['REVENUE', 'OPEX', 'EBITDA', 'TAX_EXPENSE', 'CAPEX', 'CHNG_WC']
-VALUTION_INPUT_COLS = ['CASH_INVESTMENTS', 'DEBT', 'WADS', 'PRICE']
+VALUTION_INPUT_COLS = ['CASH_INVESTMENTS', 'DEBT', 'PREF_SEC', 'NON_CON_INT', 'WADS', 'PRICE']
 PATH = 'C:/Users/Justin/PycharmProjects/equilibrium/data/'
 
 def _get_data(location, directory):
@@ -108,7 +108,7 @@ def _calculate_noa(df):
     :param df:
     :return: df
     """
-    df['NON_OP_ASSETS'] = df.CASH_INVESTMENTS - df.DEBT
+    df['NON_OP_ASSETS'] = df.CASH_INVESTMENTS - df.DEBT - df.PREF_SEC - df.NON_CON_INT
 
 
 def _calculate_mc(df):
@@ -137,15 +137,15 @@ def calculate_valuation(df):
     1. Cash                             CASH_INVESTMENTS
     2. Investments                      CASH_INVESTMENTS
     3. Debt                             DEBT
-    4. Preferred Securities             TBD
-    5. Non-controlling interests        TBD
+    4. Preferred Securities             PREF_SEC
+    5. Non-controlling interests        NON_CON_INT
     6. Weighted Average Diluted Shares  WADS
     7. Closing Stock Price              PRICE
 
     :param df
-        ['CASH_INVESTMENTS', 'DEBT', 'WADS', 'PRICE']
+        columns: ['CASH_INVESTMENTS', 'DEBT', 'PREF_SEC', 'NON_CON_INT', 'WADS', 'PRICE']
     :return: df
-        ['FIRM_VALUE', 'NON_OP_ASSETS', 'WADS', 'PRICE']
+        columns: ['FIRM_VALUE', 'NON_OP_ASSETS', 'WADS', 'PRICE']
     """
     _calculate_noa(df)
     _calculate_mc(df)
