@@ -88,10 +88,10 @@ def calculate_factors(df, tbill_data):
 
     df.loc[df['EBITDA'] < 0, 'EBITDA'] = 0
 
-    _calculate_free_cash_flow(df)
-    _transform_to_trailing_12_months(df)
-    _calculate_margins(df)
-    _calculate_growth_rates(df)
+    df = _calculate_free_cash_flow(df)
+    df = _transform_to_trailing_12_months(df)
+    df = _calculate_margins(df)
+    df = _calculate_growth_rates(df)
     model_factors = df[['REVENUE', 'EBITDA_MARGIN', 'TAX_EXPENSE_MARGIN', 'CAPEX_MARGIN', 'CHNG_WC_MARGIN', 'REVENUE_GROWTH', 'EBITDA_GROWTH', 'CAPEX_GROWTH']]
 
     tbill_data.set_index('observation_date', inplace=True)
