@@ -15,6 +15,7 @@ FACTOR_INPUT_COLS = ['REVENUE', 'OPEX', 'EBITDA', 'TAX_EXPENSE', 'CAPEX', 'CHNG_
 VALUTION_INPUT_COLS = ['CASH_INVESTMENTS', 'DEBT', 'PREF_SEC', 'NON_CON_INT', 'WADS', 'PRICE']
 PATH = 'C:/Users/Justin/PycharmProjects/equilibrium/data/'
 
+
 def _get_data(location, directory):
     data_dir = location + directory
     s_files = [pd.read_csv(data_dir + '/' + fn) for fn in file_names]
@@ -33,7 +34,10 @@ def _calculate_free_cash_flow(df):
 
 def _transform_to_trailing_12_months(df):
     # Trailing 12 months (TTM) by taking T-1, T-2, T-3, T-4
-    return df.apply(lambda x: x.shift(-1) + x.shift(-2) + x.shift(-3) + x.shift(-4))
+    df = df.apply(lambda x: x.shift(-1) + x.shift(-2) + x.shift(-3) + x.shift(-4))
+    # Last 4 dates will need to be removed
+    df = df.dropna()
+    return df
 
 
 def _calculate_margins(df):
@@ -85,8 +89,6 @@ def calculate_factors(df, tbill_data):
             ['REVENUE', 'EBITDA_MARGIN', 'TAX_EXPENSE_MARGIN', 'CAPEX_MARGIN', 'CHNG_WC_MARGIN',
              'REVENUE_GROWTH', 'EBITDA_GROWTH', 'CAPEX_GROWTH', 'TB3M', 'TB10YR']
     """
-
-    df.loc[df['EBITDA'] < 0, 'EBITDA'] = 0
 
     df = _calculate_free_cash_flow(df)
     df = _transform_to_trailing_12_months(df)
@@ -154,12 +156,16 @@ def calculate_valuation(df):
 
 
 def _model_cleanup(model):
-    pass
-    #TODO Maybe need maybe not
+    model.loc[model['EBITDA'] < 0, 'EBITDA'] = 0
+    model = model.dropna()
+
+
+    return model
 
 
 def build_model(company):
     stock_data, tbill_data = _get_data(PATH, company)
+    stock_data = _model_cleanup(stock_data)
     factors = calculate_factors(stock_data[FACTOR_INPUT_COLS], tbill_data)
     valuation = calculate_valuation(stock_data[VALUTION_INPUT_COLS])
     model = factors.join(valuation, how='inner')
