@@ -1,0 +1,51 @@
+---
+title: "Equilibrium Valuation"
+author: "Justin Dano"
+date: "16 November 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Table of Contents:
+1. Overview
+2. Data Cleaning
+3. Outlier detection
+4. Analysis of variables
+5. Regression 
+6. Regression Metrics
+
+  R-Squared
+  Adj R-Squared
+  F-Statistic
+  Std. Error
+  t-statistic
+  AIC
+  BIC
+  Mallows cp
+  MAPE (Mean absolute percentage error)
+  MSE (Mean squared error)
+  Min_Max Accuracy
+
+
+# Overview
+http://r-statistics.co/Linear-Regression.html
+
+https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3177338
+
+
+```{r cars}
+getwd()
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
