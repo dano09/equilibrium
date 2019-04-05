@@ -6,13 +6,13 @@
 
 ## Abstract
 
-This paper takes a look at a systematic equity valuation model and performs regression analysis to gain insights to whether or not the model has any predictive characteristics. The work here is a continuation of Boris Wang’s paper1. His researched laid the ground work for the model and how build the features, but only involved a simple regression model in excel. Our intentions are to understand the underlying factors proposed in his model and see which factors are relevant, the validity of various types of regression, and measure the efficacy of these models. Wang’s model is based off the discounted cash flow (DCF) theory which values an asset as a function of the income it generated, the uncertainty of that income, and the risk-free rate of the market. Our analysis follows in sync with Wang’s, using a similar dataset of US companies in the S&P 500. We perform outlier analysis followed by the standard linear regression. We follow up with performing various types of regularized regression include Ridge, Lasso, and Elastic Net to determine which features have the highest corresponding importance. 
+This paper takes a look at a systematic equity valuation model and performs regression analysis to gain insights to whether or not the model has any predictive characteristics. The work here is a continuation of Boris Wang’s paper<sup>1</sup>. His researched laid the ground work for the model and how build the features, but only involved a simple regression model in excel. Our intentions are to understand the underlying factors proposed in his model and see which factors are relevant, the validity of various types of regression, and measure the efficacy of these models. Wang’s model is based off the discounted cash flow (DCF) theory which values an asset as a function of the income it generated, the uncertainty of that income, and the risk-free rate of the market. Our analysis follows in sync with Wang’s, using a similar dataset of US companies in the S&P 500. We perform outlier analysis followed by the standard linear regression. We follow up with performing various types of regularized regression include Ridge, Lasso, and Elastic Net to determine which features have the highest corresponding importance. 
 
 ## 1. Outline
 Section 2 will introduce the underlying theory of financial valuation, and the theory behind the model. Section 3 gives a literature review, and section 4 our research thesis. Section 5 dives into the technical details of how the data was obtained and transformed in a way that could emulate Wang’s Model. Section 6 dives into the model creation, deploying our original on using regression to build a predictive model. Section 7 covers the results of our models, and conclusion provided in 8. Following the conclusion we have an attached appendix for references and additional graphs.
 
 ## 2. Introduction
-Valuation is the process of determining the economic value of a business or company, and understanding how to derive that economic value is the primary business of most financial institutions. By taking a look at the sheer size of the financial industry, we gain insight in just how relevant the ability to understand the worth of something really is. Our analysis looks to extend the current understanding of the valuation models, and more specifically, the equilibrium valuation model. Equilibrium, in the economic sense, is the state of the market where supply and demand are equal2. By making this brass assumption and we can construct a framework for understanding how a company can be valued using metrics such as cash flow, EBITDA, and operating expenses.
+Valuation is the process of determining the economic value of a business or company, and understanding how to derive that economic value is the primary business of most financial institutions. By taking a look at the sheer size of the financial industry, we gain insight in just how relevant the ability to understand the worth of something really is. Our analysis looks to extend the current understanding of the valuation models, and more specifically, the equilibrium valuation model. Equilibrium, in the economic sense, is the state of the market where supply and demand are equal<sup>2</sup>. By making this brass assumption and we can construct a framework for understanding how a company can be valued using metrics such as cash flow, EBITDA, and operating expenses.
 A large amount of research on valuation has already been done, and since the theory of the equilibrium model is not the subject of this paper, we will only summarize its main parts relevant to the analysis performed. It suffices to say that the model is derived from the discounted cash flow model (DCF Model) which is well known and established in the industry. The underlying economics of each factors is presented in the original paper by Wang. 
 
 ### 2.1 Theory
@@ -26,7 +26,7 @@ Income of an asset can be quantifiable in a few ways. The one we use here is the
 ![f2](images/f2.PNG)
 
 ### 2.2 Proposed Model
-Our model has three main components used to model firm value,  FCF, TG, and  RF. Each of these components can have varying degree of factors, but will be designed in a way that emulates the original paper by Wang1. The terms n are measured quarterly.  
+Our model has three main components used to model firm value,  FCF, TG, and  RF. Each of these components can have varying degree of factors, but will be designed in a way that emulates the original paper by Wang<sup>1</sup>. The terms n are measured quarterly.  
 
 ![f3](images/f3.PNG)
 
@@ -77,7 +77,7 @@ Each field also has an explicit variable name. These variable, while not seen wh
 ![f9](images/f9.PNG)
 
 ### 5.3 Creating Model Variables
-These next calculations are organized separately because they are included in the original research paper by Wang. We followed his formula to be consistent. Before these calculations were done, we performed trailing twelve month transformation on each data column. For a given period n, it is calculated as the sum of (n – 1 + n – 2 + n – 3 quarters). This is help remove the seasonality of the data. For more information on how the data preparation for the features were done, it can be read in Wang’s paper1.
+These next calculations are organized separately because they are included in the original research paper by Wang. We followed his formula to be consistent. Before these calculations were done, we performed trailing twelve month transformation on each data column. For a given period n, it is calculated as the sum of (n – 1 + n – 2 + n – 3 quarters). This is help remove the seasonality of the data. For more information on how the data preparation for the features were done, it can be read in Wang’s paper<sup>1</sup>.
 
 These transformations were done using a combination of Python and Pandas. After all the fields are extracted and placed in their respective .csv files we use another Python to create the model.csv file used in analysis for each company. Given the required effort for data cleaning, it is worth mentioning that our analysis is a small sample of the original paper’s universe for data analysis, and is not entirely representative. Now that the scripts are built however, it would easier to extract larger datasets for future analysis. The only manual process is download the files from Bloomberg. Also the original paper excluded financial sector and some other industries that had did unique types of financial reporting.
 
@@ -85,7 +85,7 @@ The model proposed is:
 
 ![f10](images/f10.PNG)
 
-More detail on why these features are chosen can be reviewed in section 2.2. Here we describe how the value of each one of these features are determined. As previously stated, these are largely replicated to match the values done in Wang’s paper1. Deviations from his formula are mentioned explicitly.
+More detail on why these features are chosen can be reviewed in section 2.2. Here we describe how the value of each one of these features are determined. As previously stated, these are largely replicated to match the values done in Wang’s paper. Deviations from his formula are mentioned explicitly.
 
 ![f13](images/f11.PNG)
 
@@ -101,13 +101,10 @@ First objective in our analysis was to consider the outliers of the dataset for 
 
 It is clear from the various scatterplots that some of our features do exhibit some outliers. Examples of some extreme outliers include the tax expense margin and change in working capital margin. In the next section we will take a look on how to handle these outliers. One thing to consider is perhaps we just had bad data on one of our companies. The next method used will extract the same feature for all nine companies and display it in a similar matter. This way we will be able to identify what features are more commonly prone to outliers instead of a single company. For comparing one feature for all companies, we provide two samples of features, revenue and Change in Working Capital Margin along with the intended predicted value (Firm Value). To see the graphs of all model features please the appendix.
 
-#### Revenue
 ![f16](images/f14.PNG)
 
-#### Change in Working Capital
 ![f17](images/f15.PNG)
 
-#### Firm Value
 ![f18](images/f16.PNG)
 
 From the previous three graphs it is made quite clear that our data on revenue and calculated firm value is pretty solid, while our data on change in working capital is prone to some outliers (while being overall more volatile). After removing any outliers that are clearly just issues from egregious data, we have three options for handling outliers that actually impact the analysis of the regression. First, and the easiest option, is to simply ignore the outliers. The second option would be to remove any outliers, and the third is capping the outliers based on the 1st and 3rd quartile. First let us visualize how the data may change when removing outliers.
@@ -145,7 +142,7 @@ The Residuals vs Fitted chart sheds light on our underlying factors. It gives in
 variable. The residuals shown from Normal Q-Q plot appear to behave linearly except towards the end of the distribution, it almost looks as if it follows some sort of Poisson process. Checking for Homoscedasticity, we view the Scale-Location graph. While somewhat linear, there is a clear pattern of the majority of the variance taking place early on followed by a dispersion. And since we already took care of the majority of our outliers, the Cook’s distance presented in the Residuals vs Leverage diagram does not provide much useful insight.
 
 ### Model 2: Ridge Regression
-Our next three models will try to build out robust models using regularization5. For ridge regression, we check various regularization values (lambda) to identify the best fit. We will accomplish this by using the cross validation library in R. These models apply regularization terms to penalize models that have large numbers of coefficients. There are plenty of online resources for discovering the different implementation details of these models.
+Our next three models will try to build out robust models using regularization<sup>5</sup>. For ridge regression, we check various regularization values (lambda) to identify the best fit. We will accomplish this by using the cross validation library in R. These models apply regularization terms to penalize models that have large numbers of coefficients. There are plenty of online resources for discovering the different implementation details of these models.
 
 ![f25](images/f23.PNG)
 
@@ -187,8 +184,9 @@ It is clear that the 10 Year Treasury Rate has an impact on the equilibrium mode
 Our analysis has taken a look at the equilibrium valuation model from Wang. From extracting the data to replicating the features and finally performing regression on the model. Our findings show that the model does have potential to be used in a predictive manner, and that some of the features may appear to have some potential to be indicators on the firm value. For determining the accuracy of this model, future work could be done to apply these models to test datasets of new financial statements.
 
 ## References
-1 Equilibrium Valuation Mode: A Regression-Based Fundamental Equity Valuation Model
-2 https://www.investopedia.com/terms/e/equilibrium.asp
-3 https://www.stlouisfed.org/
-4 Using FA (financial Analysis function)
+1. Equilibrium Valuation Mode: A Regression-Based Fundamental Equity Valuation Model
+2. https://www.investopedia.com/terms/e/equilibrium.asp
+3. https://www.stlouisfed.org/
+4. Using FA (financial Analysis function)
+5. https://www.youtube.com/watch?v=FWCPFUwZkn0
 
